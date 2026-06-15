@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prompt SaaS — louisdeploys</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600&display=swap');
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0d0d0d;
+      --surface: #161616;
+      --border: #2a2a2a;
+      --accent: #c8ff00;
+      --accent-dim: rgba(200, 255, 0, 0.08);
+      --text: #e8e8e8;
+      --text-muted: #666;
+      --text-code: #b8ff6e;
+      --radius: 10px;
+    }
+
+    html, body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 48px 20px 80px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 680px;
+    }
+
+    /* Badge source */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--accent-dim);
+      border: 1px solid rgba(200, 255, 0, 0.2);
+      border-radius: 100px;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+    }
+
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* Heading */
+    h1 {
+      font-size: clamp(22px, 4vw, 30px);
+      font-weight: 600;
+      color: #fff;
+      line-height: 1.3;
+      margin-bottom: 10px;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      font-size: 15px;
+      color: var(--text-muted);
+      margin-bottom: 36px;
+      line-height: 1.5;
+    }
+
+    .subtitle span {
+      color: var(--text);
+    }
+
+    /* Code block */
+    .code-wrapper {
+      position: relative;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .code-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      background: #111;
+    }
+
+    .code-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    /* Copy button */
+    .copy-btn {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 6px;
+      padding: 7px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: transform 0.15s, background 0.15s;
+      white-space: nowrap;
+    }
+
+    .copy-btn:hover {
+      background: #d4ff1a;
+      transform: translateY(-1px);
+    }
+
+    .copy-btn:active {
+      transform: translateY(0);
+    }
+
+    .copy-btn.copied {
+      background: #1aff8c;
+    }
+
+    .copy-btn svg {
+      flex-shrink: 0;
+    }
+
+    /* Prompt text */
+    pre {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      line-height: 1.75;
+      color: #ccc;
+      padding: 24px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow: hidden;
+      max-height: 380px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: #2a2a2a transparent;
+    }
+
+    pre::-webkit-scrollbar {
+      width: 4px;
+    }
+    pre::-webkit-scrollbar-thumb {
+      background: #2a2a2a;
+      border-radius: 4px;
+    }
+
+    /* Highlight emoji sections */
+    .emoji-section {
+      color: var(--text-code);
+      font-weight: 600;
+    }
+
+    /* Gradient fade at bottom of pre */
+    .code-fade {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: linear-gradient(to top, var(--surface), transparent);
+      pointer-events: none;
+      border-radius: 0 0 var(--radius) var(--radius);
+    }
+
+    /* Big copy CTA below */
+    .cta-row {
+      margin-top: 20px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .cta-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      padding: 14px 28px;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: transform 0.15s, background 0.15s, box-shadow 0.15s;
+      box-shadow: 0 0 0 0 rgba(200,255,0,0);
+    }
+
+    .cta-btn:hover {
+      background: #d4ff1a;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(200,255,0,0.2);
+    }
+
+    .cta-btn:active {
+      transform: translateY(0);
+    }
+
+    .cta-btn.copied {
+      background: #1aff8c;
+      box-shadow: 0 8px 24px rgba(26,255,140,0.2);
+    }
+
+    /* Instructions */
+    .steps {
+      margin-top: 36px;
+      padding: 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+
+    .steps-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    .step {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .step:last-child {
+      margin-bottom: 0;
+    }
+
+    .step-num {
+      flex-shrink: 0;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--accent-dim);
+      border: 1px solid rgba(200,255,0,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .step-text {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .step-text strong {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    /* Footer */
+    .footer {
+      margin-top: 48px;
+      text-align: center;
+      font-size: 12px;
+      color: #333;
+    }
+
+    .footer a {
+      color: #444;
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <div class="badge">
+      <span class="badge-dot"></span>
+      louisdeploys · Ressource vidéo
+    </div>
+
+    <h1>Prompt pour builder ton SaaS avec l'IA</h1>
+    <p class="subtitle">Copie ce prompt, <span>remplis les crochets</span>, et colle-le dans ChatGPT ou Claude.</p>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <span class="code-label">prompt.txt</span>
+        <button class="copy-btn" id="copyHeaderBtn" onclick="copyPrompt('copyHeaderBtn')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+          Copier
+        </button>
+      </div>
+
+      <pre id="promptText">Tu es un expert en développement de SaaS. Je veux créer une application web de A à Z.
+
+🎯 MON IDÉE
+Nom du projet : [NOM DE TON SAAS]
+Description en une phrase : [CE QUE FAIT TON APP EN UNE LIGNE]
+Problème résolu : [LE PROBLÈME QUE TU RÈGLES POUR TES UTILISATEURS]
+
+👥 MA CIBLE
+Utilisateurs : [QUI VA UTILISER L'APP ? EX : freelances, PME, étudiants...]
+Cas d'usage principal : [CE QUE L'UTILISATEUR VIENT FAIRE SUR L'APP]
+
+⚙️ FONCTIONNALITÉS
+Les fonctionnalités principales sont :
+1. [FONCTIONNALITÉ 1]
+2. [FONCTIONNALITÉ 2]
+3. [FONCTIONNALITÉ 3]
+(ajoute autant que nécessaire)
+
+💻 STACK TECHNIQUE
+Frontend : [EX : React, Vue, Next.js — ou "choisis toi-même"]
+Backend : [EX : Node.js, Python/FastAPI — ou "choisis toi-même"]
+Base de données : [EX : PostgreSQL, Supabase, Firebase — ou "choisis toi-même"]
+Auth : [EX : Clerk, NextAuth, Supabase Auth — ou "choisis toi-même"]
+Paiements : [EX : Stripe — ou "non applicable"]
+Déploiement : [EX : Vercel, Railway — ou "choisis toi-même"]
+
+🎨 DESIGN
+Style visuel : [EX : minimaliste, moderne, coloré, professionnel...]
+Couleurs souhaitées : [EX : bleu et blanc — ou "choisis toi-même"]
+
+📦 CE QUE JE VEUX QUE TU GÉNÈRES
+- [ ] L'architecture complète du projet (dossiers, fichiers)
+- [ ] Le schéma de base de données
+- [ ] Le code de la landing page
+- [ ] Le code des pages principales de l'app
+- [ ] Le système d'authentification
+- [ ] [AUTRE CHOSE QUE TU VEUX]
+
+🚀 PAR OÙ COMMENCER
+Commence par [EX : la landing page / la structure du projet / la base de données]</pre>
+
+      <div class="code-fade"></div>
+    </div>
+
+    <div class="cta-row">
+      <button class="cta-btn" id="copyMainBtn" onclick="copyPrompt('copyMainBtn')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>
+        Copier le prompt complet
+      </button>
+    </div>
+
+    <div class="steps">
+      <div class="steps-title">Comment utiliser</div>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-text"><strong>Copie</strong> le prompt ci-dessus</div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-text"><strong>Remplis</strong> chaque champ entre crochets <strong>[...]</strong> avec les infos de ton projet</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-text"><strong>Colle</strong> dans ChatGPT, Claude ou Gemini et laisse l'IA builder</div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <a href="https://www.instagram.com/louisdeploys" target="_blank">@louisdeploys</a> — Contenu débloqué depuis la vidéo
+    </div>
+
+  </div>
+
+  <script>
+    function copyPrompt(btnId) {
+      const text = document.getElementById('promptText').innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById(btnId);
+        const originalHTML = btn.innerHTML;
+        const isMain = btnId === 'copyMainBtn';
+
+        btn.classList.add('copied');
+        btn.innerHTML = isMain
+          ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Copié !`
+          : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Copié !`;
+
+        setTimeout(() => {
+          btn.classList.remove('copied');
+          btn.innerHTML = originalHTML;
+        }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>
